@@ -1,0 +1,44 @@
+name: ci
+on:
+  push:
+    branches:
+      - "main"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: phanxuanloc2612
+          password: dckr_pat_WbfU2fB4SHRc5j4hTaxND_fQW_s
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: phanxuanloc2612/web_nc_backend:latest
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: establishes ssh
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: 3.1.165.245
+          username: ubuntu
+          key: ${{secrets.EC2_SSH_KEY}}
+          port: 22
+          command_timeout: 5m
+          script: |
+            sudo docker pull phanxuanloc2612/web_nc_backend && sudo docker compose -f /home/ubuntu/learning_app/compose.yml down && sudo docker compose -f /home/ubuntu/learning_app/compose.yml up -d
